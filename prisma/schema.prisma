@@ -25,6 +25,51 @@ enum InvitationStatus {
   REVOKED
 }
 
+enum EmployeeSize {
+  SIZE_1_10
+  SIZE_11_50
+  SIZE_51_200
+  SIZE_201_500
+  SIZE_500_PLUS
+}
+
+enum ProjectStatus {
+  ACTIVE
+  ON_HOLD
+  COMPLETED
+  ARCHIVED
+}
+
+enum TaskType {
+  TASK
+  FEATURE
+  ISSUE
+}
+
+enum StatusCategory {
+  OPEN
+  IN_PROGRESS
+  DONE
+  CLOSED
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum BillingType {
+  BILLABLE
+  NON_BILLABLE
+}
+
+enum EmailTokenType {
+  PASSWORD_RESET
+  EMAIL_VERIFICATION
+}
+
 model User {
   id                String      @id    @default(uuid())
   fullName          String
@@ -36,4 +81,281 @@ model User {
   emailVerifiedAt   DateTime?
   createdAt         DateTime    @default(now())
   updatedAt         DateTime    @updatedAt
+  teamId            String?
+  companyId         String
+
+  team              Team?       @relation(fields: [teamId], references: [id], onDelete: SetNull)
+  company           Company     @relation(fields: [companyId], references: [id])
+
+  refreshTokens     RefreshToken[]
+  invitationsSent   Invitation[]
+  projectsCreated   Project[]             @relation("ProjectCreator")
+  projectMembers    ProjectMember[]
+  tasksAssigned     Task[]                @relation("TaskAssignee")
+  tasksCreated      Task[]                @relation("TaskCreator")
+  timeLogs          TimeLog[]
+  attachments       Attachment[]
+  activities        Activity[]
+  statusChanges     TaskStatusHistory[]
+  emailTokens       EmailToken[]
+
+  @@index([companyId])
+  @@index([teamId])
+}
+
+model RefreshToken {
+  id          String    @id @default(uuid())
+  userId      String
+  tokenHash   String    @unique
+  expiresAt   DateTime
+  revokedAt   DateTime?
+  createdAt   DateTime  @default(now())
+
+  user        User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Team {
+  id         String     @id  @default(uuid())
+  name       String
+  companyId  String
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+
+  company    Company    @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  users      User[]
+
+  @@index([companyId])
+}
+
+model Company {
+  id           String        @id @default(uuid())
+  name         String
+  employeeSize EmployeeSize?
+  industry     String?
+  foundedIn    Int?
+  location     String?
+  website      String?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  users             User[]
+  teams             Team[]
+  invitations       Invitation[]
+  projects          Project[]
+  workflowStatuses  WorkflowStatus[]
+}
+
+model Invitation {
+  id            String            @id   @default(uuid())
+  email         String
+  role          Role              @default(EMPLOYEE)
+  token         String            @unique
+  status        InvitationStatus  @default(PENDING)
+  expiresAt     DateTime
+  companyId     String
+  invitedById   String
+  createdAt     DateTime          @default(now())
+
+  company       Company           @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  invitedBy     User              @relation(fields: [invitedById], references: [id])
+
+  @@index([companyId])
+  @@index([email])
+}
+
+model Project {
+  id            String           @id    @default(uuid())
+  name          String
+  description   String?
+  status        ProjectStatus    @default(ACTIVE)
+  startDate     DateTime?
+  endDate       DateTime?
+  companyId     String
+  createdById   String
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+
+  company           Company          @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  createdBy         User             @relation("ProjectCreator", fields: [createdById], references: [id])
+  members           ProjectMember[]
+  tasks             Task[]
+  tags              Tag[]
+  activities        Activity[]
+
+  @@index([companyId])
+}
+
+model ProjectMember {
+  id          String      @id   @default(uuid())
+  projectId   String
+  userId      String
+  role        Role        @default(EMPLOYEE)
+  joinedAt    DateTime    @default(now())
+
+  project     Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, userId])
+  @@index([userId])
+}
+
+model WorkflowStatus {
+  id          String          @id   @default(uuid())
+  name        String
+  category    StatusCategory
+  color       String?
+  position    Int
+  isDefault   Boolean         @default(false)
+  companyId   String
+
+  company     Company         @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  tasks             Task[]
+  transitionsFrom   StatusTransition[]    @relation("FromStatus")
+  transitionsTo     StatusTransition[]    @relation("ToStatus")
+  historyFrom       TaskStatusHistory[]   @relation("HistoryFrom")
+  historyTo         TaskStatusHistory[]   @relation("HistoryTo")
+
+  @@unique([companyId, name])
+  @@index([companyId])
+}
+
+model StatusTransition {
+  id           String @id @default(uuid())
+  fromStatusId String
+  toStatusId   String
+
+  from WorkflowStatus @relation("FromStatus", fields: [fromStatusId], references: [id], onDelete: Cascade)
+  to   WorkflowStatus @relation("ToStatus", fields: [toStatusId], references: [id], onDelete: Cascade)
+
+  @@unique([fromStatusId, toStatusId])
+}
+
+model Task {
+  id            String            @id    @default(uuid())
+  title         String
+  description   String?
+  type          TaskType          @default(TASK)
+  priority      Priority          @default(MEDIUM)
+  billingType   BillingType       @default(NON_BILLABLE)
+  requestDate   DateTime?
+  startDate     DateTime?
+  dueDate       DateTime?
+  projectId     String
+  statusId      String
+  assigneeId    String?
+  parentId      String?
+  createdById   String
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  project       Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  status        WorkflowStatus    @relation(fields: [statusId], references: [id])
+  assignee      User?             @relation("TaskAssignee", fields: [assigneeId], references: [id], onDelete: SetNull)
+  createdBy     User              @relation("TaskCreator", fields: [createdById], references: [id])
+  parent        Task?             @relation("TaskSubtasks", fields: [parentId], references: [id], onDelete: Cascade)
+  subtasks      Task[]            @relation("TaskSubtasks")
+  tags          Tag[]
+  timeLogs      TimeLog[]
+  attachments   Attachment[]
+  activities    Activity[]
+  statusHistory TaskStatusHistory[]
+
+  @@index([projectId, statusId])
+  @@index([assigneeId])
+  @@index([parentId])
+}
+
+model Tag {
+  id        String  @id   @default(uuid())
+  name      String 
+  color     String?
+  projectId String
+
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  tasks     Task[]
+
+  @@unique([projectId, name])
+}
+
+model TimeLog {
+  id          String    @id   @default(uuid())
+  taskId      String
+  userId      String
+  startedAt   DateTime
+  endedAt     DateTime?
+  seconds     Int?
+  note        String?
+  createdAt   DateTime  @default(now())
+
+  task        Task      @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user        User      @relation(fields: [userId], references: [id])
+
+
+  @@index([taskId])
+  @@index([userId])
+}
+
+model Attachment {
+  id            String    @id   @default(uuid())
+  taskId        String
+  uploadedById  String
+  fileName      String
+  fileUrl       String
+  mimeType      String?
+  size          Int?
+  createdAt     DateTime  @default(now())
+
+  task          Task      @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  uploadedBy    User      @relation(fields: [uploadedById], references: [id])
+
+  @@index([taskId])
+}
+
+model Activity {
+  id          String    @id   @default(uuid())
+  projectId   String
+  taskId      String?
+  actorId     String
+  action      String
+  metadata    Json?
+  createdAt   DateTime  @default(now())
+
+  project     Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  task        Task?     @relation(fields: [taskId], references: [id])
+  actor       User      @relation(fields: [actorId], references: [id])
+
+  @@index([projectId, createdAt])
+  @@index([taskId])
+}
+
+model TaskStatusHistory {
+  id            String     @id  @default(uuid())
+  taskId        String
+  fromStatusId  String?
+  toStatusId    String
+  changedById   String
+  changedAt     DateTime   @default(now())
+
+  task       Task            @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  fromStatus WorkflowStatus? @relation("HistoryFrom", fields: [fromStatusId], references: [id])
+  toStatus   WorkflowStatus  @relation("HistoryTo", fields: [toStatusId], references: [id])
+  changedBy  User            @relation(fields: [changedById], references: [id])
+
+  @@index([taskId])
+}
+
+model EmailToken {
+  id        String         @id @default(uuid())
+  userId    String
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      EmailTokenType
+  tokenHash String         @unique      // only a hash is stored, never the token itself
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime       @default(now())
+
+  @@index([userId, type])
 }
