@@ -263,7 +263,7 @@ model Task {
   activities    Activity[]
   statusHistory TaskStatusHistory[]
 
-  @@index([projectId, statusId])
+  @@index([projectId, type, statusId])
   @@index([assigneeId])
   @@index([parentId])
 }

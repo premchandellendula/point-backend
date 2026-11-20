@@ -1,8 +1,5 @@
 import z from "zod";
-import { Role } from "../../generated/prisma/enums.js";
 import type { Prisma } from "../../generated/prisma/client.js";
-
-const token = z.string().trim().min(20).max(200);
 
 export const registerCompanySchema = z.object({
     companyName: z.string().trim().min(2).max(100),
@@ -18,7 +15,6 @@ export const acceptInviteSchema = z.object({
     avatarUrl: z.url().optional(),
     jobTitle: z.string().trim().max(100).optional(),
 }).strict();
-
 
 export const updateUserSchema = z
     .object({
