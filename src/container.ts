@@ -8,6 +8,9 @@ import { InvitationService } from "./app/Invitation/invitation.service.js";
 import { ProjectController } from "./app/Project/project.controller.js";
 import { ProjectDao } from "./app/Project/project.dao.js";
 import { ProjectService } from "./app/Project/project.service.js";
+import { TaskController } from "./app/Task/task.controller.js";
+import { TaskDao } from "./app/Task/task.dao.js";
+import { TaskService } from "./app/Task/task.service.js";
 import { UserController } from "./app/User/user.controller.js";
 import { UserDao } from "./app/User/user.dao.js";
 import { UserService } from "./app/User/user.service.js";
@@ -19,18 +22,21 @@ export function buildContainer(prisma: PrismaClient) {
     const companyDao = new CompanyDao(prisma);
     const invitationDao = new InvitationDao(prisma);
     const projectDao = new ProjectDao(prisma);
+    const taskDao = new TaskDao(prisma);
 
     const userService = new UserService(userDao, refreshTokenDao);
     const companyService = new CompanyService(companyDao);
     const invitationService = new InvitationService(invitationDao);
     const projectService = new ProjectService(projectDao);
+    const taskService = new TaskService(taskDao);
 
     const userController = new UserController(userService);
     const companyController = new CompanyController(companyService);
     const invitationController = new InvitationController(invitationService);
     const projectController = new ProjectController(projectService);
+    const taskController = new TaskController(taskService);
 
-    return { userController, companyController, invitationController, projectController };
+    return { userController, companyController, invitationController, projectController, taskController };
 }
 
 export type Container = ReturnType<typeof buildContainer>;
