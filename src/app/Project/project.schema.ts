@@ -5,7 +5,8 @@ export const createProjectSchema = z.object({
     name: z.string().trim().min(2).max(100),
     description: z.string().trim().max(2000).optional(),
     startDate: z.coerce.date().optional(),
-    endDate: z.coerce.date().optional()
+    endDate: z.coerce.date().optional(),
+    tagIds: z.array(z.uuid()).max(20).optional(),
 }).strict();
 
 export const updateProjectSchema = z.object({
@@ -14,6 +15,7 @@ export const updateProjectSchema = z.object({
     status: z.enum(["ACTIVE", "ON_HOLD", "COMPLETED", "ARCHIVED"]),
     startDate: z.coerce.date().nullable(),
     endDate: z.coerce.date().nullable(),
+    tagIds: z.array(z.uuid()).max(20).optional(),
 }).partial().strict();
 
 export const addMemberSchema = z.object({
@@ -37,6 +39,7 @@ export const projectSelect = {
     endDate: true,
     createdAt: true,
     updatedAt: true,
+    tags: { select: { id: true, name: true, color: true } },
 } satisfies Prisma.ProjectSelect;
 
 export const projectDetailSelect = {
