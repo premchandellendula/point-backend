@@ -145,6 +145,7 @@ model Company {
   invitations       Invitation[]
   projects          Project[]
   workflowStatuses  WorkflowStatus[]
+  tags              Tag[]
 }
 
 model Invitation {
@@ -272,12 +273,14 @@ model Tag {
   id        String  @id   @default(uuid())
   name      String 
   color     String?
-  projectId String
+  companyId String
 
-  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  company   Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
   tasks     Task[]
+  projects  Project[]
 
-  @@unique([projectId, name])
+  @@unique([companyId, name])
+  @@index([companyId])
 }
 
 model TimeLog {
@@ -324,7 +327,7 @@ model Activity {
   createdAt   DateTime  @default(now())
 
   project     Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  task        Task?     @relation(fields: [taskId], references: [id])
+  task        Task?     @relation(fields: [taskId], references: [id], onDelete: Cascade)
   actor       User      @relation(fields: [actorId], references: [id])
 
   @@index([projectId, createdAt])

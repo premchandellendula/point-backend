@@ -24,7 +24,12 @@ export class ProjectService {
             const companyId = await this.dao.getCompanyId(user.id);
             if(!companyId) return new Result(true, ResultCode.NotFound, "Company not found");
 
-            const project = await this.dao.createWithCreator({ ...data, companyId }, user.id);
+            const { tagIds, ...rest } = data;
+            if (tagIds?.length && !(await this.dao.tagsInCompany(tagIds, companyId))) {
+                return new Result(true, ResultCode.BadRequest, "Invalid tags");
+            }
+
+            const project = await this.dao.createWithCreator({ ...rest, companyId, ...(tagIds?.length && { tags: { connect: [...new Set(tagIds)].map((id) => ({ id })) } }) }, user.id);
             return new Result(false, ResultCode.Created, "Project created", project);
         } catch (error) {
             return serverError(error);
@@ -63,7 +68,14 @@ export class ProjectService {
             if (!companyId || !(await this.dao.existsInCompany(id, companyId))) {
                 return new Result(true, ResultCode.NotFound, "Project not found");
             }
-            return await this.dao.update(id, data);
+            const { tagIds, ...fields } = data;
+            if (tagIds?.length && !(await this.dao.tagsInCompany(tagIds, companyId))) {
+                return new Result(true, ResultCode.BadRequest, "Invalid tags");
+            }
+            return await this.dao.update(id, {
+                ...fields,
+                ...(tagIds && { tags: { set: [...new Set(tagIds)].map((id) => ({ id })) } })
+            });
         } catch (error) {
             return serverError(error);
         }

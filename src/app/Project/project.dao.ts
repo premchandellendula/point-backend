@@ -35,6 +35,12 @@ export class ProjectDao extends BaseDao<
         return this.prisma.project.findFirst({ where: { id, ...scope }, select: projectDetailSelect })
     }
 
+    async tagsInCompany(tagIds: string[], companyId: string) {
+        const unique = [...new Set(tagIds)];
+        const count = await this.prisma.tag.count({ where: { id: { in: unique }, companyId } });
+        return count === unique.length;
+    }
+    
     existsInCompany(id: string, companyId: string) {
         return this.prisma.project.count({ where: { id, companyId } }).then((c) => c > 0);
     }
