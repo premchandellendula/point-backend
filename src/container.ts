@@ -14,15 +14,24 @@ import { TagService } from "./app/Tag/tag.service.js";
 import { TaskController } from "./app/Task/task.controller.js";
 import { TaskDao } from "./app/Task/task.dao.js";
 import { TaskService } from "./app/Task/task.service.js";
+import { TimeLogController } from "./app/TimeLog/timeLog.controller.js";
+import { TimeLogDao } from "./app/TimeLog/timeLog.dao.js";
+import { TimeLogService } from "./app/TimeLog/timeLog.service.js";
 import { UserController } from "./app/User/user.controller.js";
 import { UserDao } from "./app/User/user.dao.js";
 import { UserService } from "./app/User/user.service.js";
 import { WorkflowStatusController } from "./app/WorkflowStatus/workflowStatus.controller.js";
 import { WorkflowStatusDao } from "./app/WorkflowStatus/workflowStatus.dao.js";
 import { WorkflowStatusService } from "./app/WorkflowStatus/workflowStatus.service.js";
+import { env } from "./config/env.js";
 import type { PrismaClient } from "./generated/prisma/client.js";
+import { SupabaseFileStorage } from "./shared/shared/supabase.storage.js";
+import { FileUploader } from "./shared/shared/uploader.js";
 
 export function buildContainer(prisma: PrismaClient) {
+    const storage = new SupabaseFileStorage(env.supabaseUrl, env.supabaseKey);
+    const uploader = new FileUploader(storage);
+    
     const userDao = new UserDao(prisma);
     const refreshTokenDao = new RefreshTokenDao(prisma);
     const companyDao = new CompanyDao(prisma);
@@ -31,6 +40,7 @@ export function buildContainer(prisma: PrismaClient) {
     const taskDao = new TaskDao(prisma);
     const tagDao = new TagDao(prisma);
     const workflowStatusDao = new WorkflowStatusDao(prisma);
+    const timeLogDao = new TimeLogDao(prisma);
 
     const userService = new UserService(userDao, refreshTokenDao);
     const companyService = new CompanyService(companyDao);
@@ -39,6 +49,7 @@ export function buildContainer(prisma: PrismaClient) {
     const taskService = new TaskService(taskDao);
     const tagService = new TagService(tagDao);
     const workflowStatusService = new WorkflowStatusService(workflowStatusDao);
+    const timeLogService = new TimeLogService(timeLogDao);
 
     const userController = new UserController(userService);
     const companyController = new CompanyController(companyService);
@@ -47,8 +58,9 @@ export function buildContainer(prisma: PrismaClient) {
     const taskController = new TaskController(taskService);
     const tagController = new TagController(tagService);
     const workflowStatusController = new WorkflowStatusController(workflowStatusService);
+    const timeLogController = new TimeLogController(timeLogService);
 
-    return { userController, companyController, invitationController, projectController, taskController, tagController, workflowStatusController };
+    return { userController, companyController, invitationController, projectController, taskController, tagController, workflowStatusController, timeLogController };
 }
 
 export type Container = ReturnType<typeof buildContainer>;
