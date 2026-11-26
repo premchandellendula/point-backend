@@ -1,3 +1,6 @@
+import { AttachmentController } from "./app/Attachment/attachment.controller.js";
+import { AttachmentDao } from "./app/Attachment/attachment.dao.js";
+import { AttachmentService } from "./app/Attachment/attachment.service.js";
 import { RefreshTokenDao } from "./app/auth/refreshToken.dao.js";
 import { CompanyController } from "./app/Company/company.controller.js";
 import { CompanyDao } from "./app/Company/company.dao.js";
@@ -25,8 +28,8 @@ import { WorkflowStatusDao } from "./app/WorkflowStatus/workflowStatus.dao.js";
 import { WorkflowStatusService } from "./app/WorkflowStatus/workflowStatus.service.js";
 import { env } from "./config/env.js";
 import type { PrismaClient } from "./generated/prisma/client.js";
-import { SupabaseFileStorage } from "./shared/shared/supabase.storage.js";
-import { FileUploader } from "./shared/shared/uploader.js";
+import { SupabaseFileStorage } from "./shared/storage/supabase.storage.js";
+import { FileUploader } from "./shared/storage/uploader.js";
 
 export function buildContainer(prisma: PrismaClient) {
     const storage = new SupabaseFileStorage(env.supabaseUrl, env.supabaseKey);
@@ -41,6 +44,7 @@ export function buildContainer(prisma: PrismaClient) {
     const tagDao = new TagDao(prisma);
     const workflowStatusDao = new WorkflowStatusDao(prisma);
     const timeLogDao = new TimeLogDao(prisma);
+    const attachmentDao = new AttachmentDao(prisma);
 
     const userService = new UserService(userDao, refreshTokenDao);
     const companyService = new CompanyService(companyDao);
@@ -50,6 +54,7 @@ export function buildContainer(prisma: PrismaClient) {
     const tagService = new TagService(tagDao);
     const workflowStatusService = new WorkflowStatusService(workflowStatusDao);
     const timeLogService = new TimeLogService(timeLogDao);
+    const attachmentService = new AttachmentService(attachmentDao, uploader);
 
     const userController = new UserController(userService);
     const companyController = new CompanyController(companyService);
@@ -59,8 +64,9 @@ export function buildContainer(prisma: PrismaClient) {
     const tagController = new TagController(tagService);
     const workflowStatusController = new WorkflowStatusController(workflowStatusService);
     const timeLogController = new TimeLogController(timeLogService);
+    const attachmentController = new AttachmentController(attachmentService);
 
-    return { userController, companyController, invitationController, projectController, taskController, tagController, workflowStatusController, timeLogController };
+    return { userController, companyController, invitationController, projectController, taskController, tagController, workflowStatusController, timeLogController, attachmentController };
 }
 
 export type Container = ReturnType<typeof buildContainer>;

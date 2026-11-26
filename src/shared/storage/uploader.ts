@@ -11,6 +11,12 @@ export interface UploadRule {
     image?: { maxWidth: number, maxHeight: number };
 }
 
+export interface UploadedFile {
+    key: string;
+    contentType: string;
+    size: number;
+}
+
 export const UPLOAD_RULES = {
     avatar: {
         bucket: "avatars",
@@ -39,8 +45,8 @@ export const UPLOAD_RULES = {
 export class FileUploader {
     constructor(private readonly storage: FileStorage) {}
 
-    async upload(file: { buffer: Buffer }, rule: UploadRule): Promise<Result<{ key: string }>> {
-        const fail = (code: ResultCode, message: string) => new Result<{ key: string }>(true, code, message);
+    async upload(file: { buffer: Buffer }, rule: UploadRule, folder: string = rule.folder): Promise<Result<UploadedFile>> {
+        const fail = (code: ResultCode, message: string) => new Result<UploadedFile>(true, code, message);
 
         if(file.buffer.length === 0) return fail(ResultCode.BadRequest, "This file is empty");
         if(file.buffer.length > rule.maxBytes) {
