@@ -4,7 +4,7 @@
     "outDir": "./dist",
     "module": "nodenext",
     "target": "es2022",
-    "types": ["node"],
+    "types": ["node", "multer"],
     "sourceMap": true,
     "strict": true,
     "verbatimModuleSyntax": true,
