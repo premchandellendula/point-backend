@@ -1,3 +1,6 @@
+import { ActivityController } from "./app/Activity/activity.controller.js";
+import { ActivityDao } from "./app/Activity/activity.dao.js";
+import { ActivityService } from "./app/Activity/activity.service.js";
 import { AttachmentController } from "./app/Attachment/attachment.controller.js";
 import { AttachmentDao } from "./app/Attachment/attachment.dao.js";
 import { AttachmentService } from "./app/Attachment/attachment.service.js";
@@ -45,6 +48,7 @@ export function buildContainer(prisma: PrismaClient) {
     const workflowStatusDao = new WorkflowStatusDao(prisma);
     const timeLogDao = new TimeLogDao(prisma);
     const attachmentDao = new AttachmentDao(prisma);
+    const activityDao = new ActivityDao(prisma);
 
     const userService = new UserService(userDao, refreshTokenDao);
     const companyService = new CompanyService(companyDao);
@@ -55,6 +59,7 @@ export function buildContainer(prisma: PrismaClient) {
     const workflowStatusService = new WorkflowStatusService(workflowStatusDao);
     const timeLogService = new TimeLogService(timeLogDao);
     const attachmentService = new AttachmentService(attachmentDao, uploader);
+    const activityService = new ActivityService(activityDao);
 
     const userController = new UserController(userService);
     const companyController = new CompanyController(companyService);
@@ -65,8 +70,9 @@ export function buildContainer(prisma: PrismaClient) {
     const workflowStatusController = new WorkflowStatusController(workflowStatusService);
     const timeLogController = new TimeLogController(timeLogService);
     const attachmentController = new AttachmentController(attachmentService);
+    const activityController = new ActivityController(activityService);
 
-    return { userController, companyController, invitationController, projectController, taskController, tagController, workflowStatusController, timeLogController, attachmentController };
+    return { userController, companyController, invitationController, projectController, taskController, tagController, workflowStatusController, timeLogController, attachmentController, activityController };
 }
 
 export type Container = ReturnType<typeof buildContainer>;
