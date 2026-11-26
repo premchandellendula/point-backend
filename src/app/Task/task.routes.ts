@@ -4,8 +4,9 @@ import { requireRole } from "../../shared/middleware/auth.js";
 import type { TimeLogController } from "../TimeLog/timeLog.controller.js";
 import type { AttachmentController } from "../Attachment/attachment.controller.js";
 import { uploadSingle } from "../../shared/middleware/upload.js";
+import type { ActivityController } from "../Activity/activity.controller.js";
 
-export function createTaskRouter(controller: TaskController, timeLogController: TimeLogController, attachmentController: AttachmentController): Router {
+export function createTaskRouter(controller: TaskController, timeLogController: TimeLogController, attachmentController: AttachmentController, activityController: ActivityController): Router {
     const router = Router();
     const anyUser = requireRole("ADMIN", "EMPLOYEE", "PROJECT_OWNER");
 
@@ -18,6 +19,8 @@ export function createTaskRouter(controller: TaskController, timeLogController: 
     router.get("/:id/time-logs", anyUser, timeLogController.list);
     router.post("/:id/attachments", anyUser, uploadSingle("file"), attachmentController.upload);
     router.get("/:id/attachments", anyUser, attachmentController.list);
+    router.get("/:id/activity", anyUser, activityController.taskActivity);
+    router.get("/:id/history", anyUser, activityController.taskHistory);
 
     return router;
 }

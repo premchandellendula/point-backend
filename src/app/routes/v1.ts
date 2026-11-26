@@ -15,8 +15,8 @@ export function createV1Router(c: Container): Router {
     router.use("/users", createUserRouter(c.userController));
     router.use("/companies", createCompanyRouter(c.companyController));
     router.use("/invitations", createInvitationRouter(c.invitationController));
-    router.use("/projects", createProjectRouter(c.projectController, c.taskController));
-    router.use("/tasks", createTaskRouter(c.taskController, c.timeLogController, c.attachmentController));
+    router.use("/projects", createProjectRouter(c.projectController, c.taskController, c.activityController));
+    router.use("/tasks", createTaskRouter(c.taskController, c.timeLogController, c.attachmentController, c.activityController));
     router.use("/tags", createTagRouter(c.tagController))
     router.use("/statuses", createStatusRouter(c.workflowStatusController));
     router.use("/time-logs", createTimeLogRouter(c.timeLogController));
