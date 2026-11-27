@@ -87,4 +87,16 @@ export class TaskController {
         const result = await this.service.changeStatus(req.user!, id.data, body.data);
         res.status(result.getStatus()).json(result);
     };
+
+    remove = async (req: Request, res: Response) => {
+        const id = idParam.safeParse(req.params.id);
+        if(!id.success){
+            const r = new Result(true, ResultCode.BadRequest, "Incorrect inputs", id.error.issues);
+            res.status(r.getStatus()).json(r);
+            return;
+        }
+
+        const result = await this.service.remove(req.user!, id.data);
+        res.status(result.getStatus()).json(result);
+    }
 }

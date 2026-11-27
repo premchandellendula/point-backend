@@ -54,7 +54,7 @@ export function buildContainer(prisma: PrismaClient) {
     const companyService = new CompanyService(companyDao);
     const invitationService = new InvitationService(invitationDao);
     const projectService = new ProjectService(projectDao);
-    const taskService = new TaskService(taskDao);
+    const taskService = new TaskService(taskDao, uploader);
     const tagService = new TagService(tagDao);
     const workflowStatusService = new WorkflowStatusService(workflowStatusDao);
     const timeLogService = new TimeLogService(timeLogDao);

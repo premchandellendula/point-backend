@@ -105,4 +105,48 @@ export class TaskDao extends BaseDao<
             return task;
         });
     }
+
+    findForDelete(id: string, scope: Prisma.ProjectWhereInput) {
+        return this.prisma.task.findFirst({
+            where: { id, project: scope },
+            select: { id: true, title: true, projectId: true, createdById: true }
+        })
+    }
+
+    async collectTreeIds(rootId: string) {
+        const all = [rootId];
+        let level = [rootId];
+        while(level.length) {
+            const children = await this.prisma.task.findMany({
+                where: { parentId: { in: level } },
+                select: { id: true }
+            });
+            level = children.map((c) => c.id);
+            all.push(...level);
+        }
+        return all;
+    }
+
+    async attachmentPaths(taskIds: string[]) {
+        const rows = await this.prisma.attachment.findMany({
+            where: { taskId: { in: taskIds } },
+            select: { fileUrl: true }
+        })
+        return rows.map((r) => r.fileUrl);
+    }
+
+    deleteWithActivity(task: { id: string; title: string; projectId: string }, actorId: string) {
+        return this.prisma.$transaction(async (tx) => {
+            await tx.task.delete({ where: { id: task.id } });
+            await tx.activity.create({
+                data: { 
+                    projectId: task.projectId,
+                    taskId: null,
+                    actorId,
+                    action: "task.deleted",
+                    metadata: { taskId: task.id, title: task.title}
+                }
+            })
+        })
+    }
 }

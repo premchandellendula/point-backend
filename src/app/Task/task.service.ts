@@ -1,6 +1,7 @@
 import type { Prisma } from "../../generated/prisma/client.js";
 import type { AuthUser } from "../../shared/middleware/auth.js";
 import { Result, ResultCode } from "../../shared/result/result.js";
+import { UPLOAD_RULES, type FileUploader } from "../../shared/storage/uploader.js";
 import type { TaskDao } from "./task.dao.js";
 import { taskSelect, type ChangeStatusDto, type CreateTaskDto, type ListTasksQuery, type UpdateTaskDto } from "./task.schema.js";
 
@@ -10,7 +11,10 @@ const serverError = (error: unknown) => {
 };
 
 export class TaskService {
-    constructor(private readonly dao: TaskDao) {}
+    constructor(
+        private readonly dao: TaskDao,
+        private readonly uploader: FileUploader
+    ) {}
 
     private scope(user: AuthUser, companyId: string): Prisma.ProjectWhereInput {
         return user.role === "ADMIN"
@@ -120,6 +124,29 @@ export class TaskService {
 
             const updated = await this.dao.changeStatus(id, task.projectId, task.statusId, data.statusId, user.id);
             return new Result(false, ResultCode.Success, "Status updated", updated);
+        } catch (error) {
+            return serverError(error);
+        }
+    }
+
+    async remove(user: AuthUser, id: string) {
+        try {
+            const companyId = await this.dao.getCompanyId(user.id);
+            const task = companyId ? await this.dao.findForDelete(id, this.scope(user, companyId)) : null;
+            if(!task) return new Result(true, ResultCode.NotFound, "Task not found");
+
+            if(task.createdById !== user.id && user.role !== "ADMIN"){
+                return new Result(true, ResultCode.Forbidden, "Forbidden");
+            }
+
+            const treeIds = await this.dao.collectTreeIds(id);
+            const paths = await this.dao.attachmentPaths(treeIds);
+
+            await this.dao.deleteWithActivity(task, user.id);
+
+            await Promise.all(paths.map((p) => this.uploader.discard(UPLOAD_RULES.attachment.bucket, p)));
+
+            return new Result(false, ResultCode.Success, "Task deleted");
         } catch (error) {
             return serverError(error);
         }

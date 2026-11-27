@@ -60,4 +60,16 @@ export class ProjectDao extends BaseDao<
         const r = await this.prisma.projectMember.deleteMany({ where: { projectId, userId } });
         return r.count;
     }
+
+    listMembers(projectId: string) {
+        return this.prisma.projectMember.findMany({
+            where: { projectId },
+            select: {
+                role: true,
+                joinedAt: true,
+                user: { select: { id: true, fullName: true, email: true, avatarUrl: true, jobTitle: true } },
+            },
+            orderBy: { joinedAt: "asc" },
+        });
+    }
 }

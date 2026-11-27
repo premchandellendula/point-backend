@@ -117,4 +117,16 @@ export class ProjectService {
             return serverError(error);
         }
     }
+
+    async members(user: AuthUser, projectId: string) {
+        try {
+            const companyId = await this.dao.getCompanyId(user.id);
+            if (!companyId || !(await this.dao.findScoped(projectId, this.scope(user, companyId)))) {
+                return new Result(true, ResultCode.NotFound, "Project not found");
+            }
+            return new Result(false, ResultCode.Success, "Success in read", await this.dao.listMembers(projectId));
+        } catch (error) {
+            return serverError(error);
+        }
+    }
 }
