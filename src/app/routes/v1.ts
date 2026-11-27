@@ -9,6 +9,7 @@ import { createTagRouter } from "../Tag/tag.routes.js";
 import { createStatusRouter } from "../WorkflowStatus/workflowStatus.routes.js";
 import { createTimeLogRouter } from "../TimeLog/timeLog.routes.js";
 import { createAttachmentRouter } from "../Attachment/attachment.routes.js";
+import { createTeamRouter } from "../Team/team.routes.js";
 
 export function createV1Router(c: Container): Router {
     const router = Router();
@@ -21,6 +22,7 @@ export function createV1Router(c: Container): Router {
     router.use("/statuses", createStatusRouter(c.workflowStatusController));
     router.use("/time-logs", createTimeLogRouter(c.timeLogController));
     router.use("/attachments", createAttachmentRouter(c.attachmentController));
+    router.use("/teams", createTeamRouter(c.teamController));
 
     return router;
 }
