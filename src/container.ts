@@ -20,6 +20,9 @@ import { TagService } from "./app/Tag/tag.service.js";
 import { TaskController } from "./app/Task/task.controller.js";
 import { TaskDao } from "./app/Task/task.dao.js";
 import { TaskService } from "./app/Task/task.service.js";
+import { TeamController } from "./app/Team/team.controller.js";
+import { TeamDao } from "./app/Team/team.dao.js";
+import { TeamService } from "./app/Team/team.service.js";
 import { TimeLogController } from "./app/TimeLog/timeLog.controller.js";
 import { TimeLogDao } from "./app/TimeLog/timeLog.dao.js";
 import { TimeLogService } from "./app/TimeLog/timeLog.service.js";
@@ -49,6 +52,7 @@ export function buildContainer(prisma: PrismaClient) {
     const timeLogDao = new TimeLogDao(prisma);
     const attachmentDao = new AttachmentDao(prisma);
     const activityDao = new ActivityDao(prisma);
+    const teamDao = new TeamDao(prisma);
 
     const userService = new UserService(userDao, refreshTokenDao);
     const companyService = new CompanyService(companyDao);
@@ -60,6 +64,7 @@ export function buildContainer(prisma: PrismaClient) {
     const timeLogService = new TimeLogService(timeLogDao);
     const attachmentService = new AttachmentService(attachmentDao, uploader);
     const activityService = new ActivityService(activityDao);
+    const teamService = new TeamService(teamDao);
 
     const userController = new UserController(userService);
     const companyController = new CompanyController(companyService);
@@ -71,8 +76,9 @@ export function buildContainer(prisma: PrismaClient) {
     const timeLogController = new TimeLogController(timeLogService);
     const attachmentController = new AttachmentController(attachmentService);
     const activityController = new ActivityController(activityService);
+    const teamController = new TeamController(teamService);
 
-    return { userController, companyController, invitationController, projectController, taskController, tagController, workflowStatusController, timeLogController, attachmentController, activityController };
+    return { userController, companyController, invitationController, projectController, taskController, tagController, workflowStatusController, timeLogController, attachmentController, activityController, teamController };
 }
 
 export type Container = ReturnType<typeof buildContainer>;
