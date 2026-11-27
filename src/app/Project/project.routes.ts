@@ -19,6 +19,7 @@ export function createProjectRouter(controller: ProjectController, taskControlle
     router.post("/:projectId/tasks", anyUser, taskController.create);
     router.get("/:projectId/tasks", anyUser, taskController.list);
     router.get("/:projectId/activity", anyUser, activityController.projectActivity);
+    router.get("/:id/members", anyUser, controller.members);
 
     return router;
 }

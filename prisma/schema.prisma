@@ -83,6 +83,7 @@ model User {
   updatedAt         DateTime    @updatedAt
   teamId            String?
   companyId         String
+  deactivatedAt     DateTime?
 
   team              Team?       @relation(fields: [teamId], references: [id], onDelete: SetNull)
   company           Company     @relation(fields: [companyId], references: [id])

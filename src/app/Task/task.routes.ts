@@ -21,6 +21,7 @@ export function createTaskRouter(controller: TaskController, timeLogController: 
     router.get("/:id/attachments", anyUser, attachmentController.list);
     router.get("/:id/activity", anyUser, activityController.taskActivity);
     router.get("/:id/history", anyUser, activityController.taskHistory);
+    router.delete("/:id", anyUser, controller.remove);
 
     return router;
 }

@@ -3,11 +3,6 @@ import { Result, ResultCode } from "../../shared/result/result.js";
 import type { ProjectService } from "./project.service.js";
 import { addMemberSchema, createProjectSchema, idParam, listProjectsQuerySchema, updateProjectSchema } from "./project.schema.js";
 
-const badRequest = (res: Response, issues: unknown) => {
-    const r = new Result(true, ResultCode.BadRequest, "Incorrect inputs", issues);
-    res.status(r.getStatus()).json(r);
-};
-
 export class ProjectController {
     constructor(private readonly service: ProjectService) {}
 
@@ -99,6 +94,18 @@ export class ProjectController {
         }
 
         const result = await this.service.removeMember(req.user!, id.data, userId.data);
+        res.status(result.getStatus()).json(result);
+    };
+
+    members = async (req: Request, res: Response) => {
+        const id = idParam.safeParse(req.params.id);
+        if (!id.success) {
+            const r = new Result(true, ResultCode.BadRequest, "Incorrect inputs", id.error.issues);
+            res.status(r.getStatus()).json(r);
+            return; 
+        }
+
+        const result = await this.service.members(req.user!, id.data);
         res.status(result.getStatus()).json(result);
     };
 }
